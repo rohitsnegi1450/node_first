@@ -1,34 +1,33 @@
-const mongoose = require('mongoose');
+const express = require('express');
+require('./config');
+const Product = require('./product');
 
-mongoose.connect("mongodb://localhost:27017/e-comm");
+const app = express();
+app.use(express.json());
 
-const ProductSchema = new mongoose.Schema({
-    name: String,
-    price: Number,
+app.post('/create', async (req, res) => {
+    const data = new Product(req.body);
+    let result = await data.save();
+    console.log(result);
+    res.send(result);
+})
+
+app.get('/list', async (req, res) => {
+    const data = await Product.find();
+    res.send(data);
 });
 
-const main = async () => {
-    const ProductsModel = mongoose.model('product', ProductSchema);
-    let data = new ProductsModel({ name: "s21", price: 1000 });
-    let result = await data.save();
+app.delete('/delete/:_id', async (req, res) => {
+    const data = await Product.deleteOne(req.params);
+    res.send(data);
+});
 
-    console.log(result);
-}
+app.put('/update/:_id', async (req, res) => {
+    let data = await Product.updateOne(
+        req.params,
+        { $set: req.body }
+    )
+    res.send(data);
+})
 
-const updateDb = async () => {
-    const ProductsModel = mongoose.model('product', ProductSchema);
-    let data = await ProductsModel.updateOne(
-        { name: 's21' },
-        { $set: { price: 1100 } }
-    );
-    console.log(data);
-}
-
-// updateDb();
-
-const deletedb = async () => {
-    const ProductsModel = mongoose.model('product', ProductSchema);
-    let data =await ProductsModel.deleteOne({name: 's21'})
-};
-
-// main();
+app.listen(5000);
